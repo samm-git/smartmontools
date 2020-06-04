@@ -20,6 +20,7 @@
 #include <sys/utsname.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <util.h>
 
 const char * os_openbsd_cpp_cvsid = "$Id$"
   OS_OPENBSD_H_CVSID;
@@ -56,7 +57,6 @@ printwarning(int msgNo, const char *extra)
 namespace os_openbsd { // No need to publish anything, name provided for Doxygen
 
 static const char *net_dev_prefix = "/dev/";
-static const char *net_dev_raw_prefix = "/dev/r";
 static const char *net_dev_ata_disk = "wd";
 static const char *net_dev_scsi_disk = "sd";
 static const char *net_dev_scsi_tape = "st";
@@ -477,8 +477,8 @@ std::string openbsd_smart_interface::get_app_examples(const char * appname)
       "  smartctl -s on -o on -S on /dev/wd0%c        (Enables SMART on first disk)\n"
       "  smartctl -t long /dev/wd0%c            (Executes extended disk self-test)\n"
       "  smartctl -A -l selftest -q errorsonly /dev/wd0%c"
-      "                                      (Prints Self-Test & Attribute errors)\n"
-      , p, p, p, p);
+      "                                      (Prints Self-Test & Attribute errors)\n",
+      p, p, p, p, p, p, p, p);
     }
     return "";
 }
@@ -519,16 +519,20 @@ int openbsd_smart_interface::get_dev_names(char ***names, const char *prefix)
     pout("Out of memory constructing scan device list\n");
     return -1;
   }
-  for (p = strtok(disknames, " "); p; p = strtok(NULL, " ")) {
+
+  for (p = strtok(disknames, ","); p; p = strtok(NULL, ",")) {
     if (strncmp(p, prefix, strlen(prefix))) {
       continue;
     }
-    mp[n] = (char *)malloc(strlen(net_dev_raw_prefix) + strlen(p) + 2);
+    char * u = strchr(p, ':');
+    if (u)
+      *u = 0;
+    mp[n] = (char *)malloc(strlen(net_dev_prefix) + strlen(p) + 2);
     if (!mp[n]) {
       pout("Out of memory constructing scan device list\n");
       return -1;
     }
-    sprintf(mp[n], "%s%s%c", net_dev_raw_prefix, p, 'a' + getrawpartition());
+    sprintf(mp[n], "%s%s%c", net_dev_prefix, p, 'a' + getrawpartition());
     n++;
   }
 
@@ -633,8 +637,8 @@ smart_device * openbsd_smart_interface::autodetect_smart_device(const char * nam
     }
   }
 
-  if (str_starts_with(test_name, net_dev_raw_prefix)) {
-    test_name += strlen(net_dev_raw_prefix);
+  if (str_starts_with(test_name, net_dev_prefix)) {
+    test_name += strlen(net_dev_prefix);
     if (!strncmp(net_dev_ata_disk, test_name, strlen(net_dev_ata_disk)))
       return get_ata_device(test_name, "ata");
     if (!strncmp(net_dev_scsi_disk, test_name, strlen(net_dev_scsi_disk))) {
