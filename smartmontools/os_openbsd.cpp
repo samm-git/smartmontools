@@ -59,7 +59,7 @@ static const char *net_dev_prefix = "/dev/";
 static const char *net_dev_raw_prefix = "/dev/r";
 static const char *net_dev_ata_disk = "wd";
 static const char *net_dev_scsi_disk = "sd";
-static const char *net_dev_scsi_tape = "enrst";
+static const char *net_dev_scsi_tape = "st";
 
 /////////////////////////////////////////////////////////////////////////////
 /// Implement shared open/close routines with old functions.
