@@ -21,8 +21,8 @@ image: Ubuntu2204
 build_script:
 - export SOURCE_DATE_EPOCH=$(git log -1 --format="%at")
 - SM_VER=$(grep -E 'AC_INIT\(\[smartmontools\]' configure.ac|awk -F, '{print $2}'|tr -d '[]')
+- sh: "SVNREV=$(git log -1|grep -oP 'git-svn-id: http://svn.code.sf.net/p/smartmontools/code/trunk@(\\d+)'|awk -F@ '{print $2}')\""
 - BUILD_INFO='"(AppVeyor)"'
-- "SVNREV=$(git log -1|grep -oP 'git-svn-id: http://svn.code.sf.net/p/smartmontools/code/trunk@(\d+)'|awk -F@ '{print $2}')"
 - cd smartmontools
 - 'echo "Starting build: SOURCE_DATE_EPOCH: ${SOURCE_DATE_EPOCH}, SM_VER: ${SM_VER}, SVNREV: ${SVNREV}"'
 - ./autogen.sh && mkdir build && cd build
