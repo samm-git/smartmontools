@@ -14,7 +14,7 @@ before_build:
 - cd $HOME
 - wget 'https://downloads.sourceforge.net/project/libpng/zlib/1.2.8/zlib128-dll.zip' && unzip -d zlib zlib128-dll.zip
 - wget https://prdownloads.sourceforge.net/nsis/nsis-3.10-src.tar.bz2 && tar -xf nsis-3.10-src.tar.bz2
-- sudo apt-get install -y apt-get install scons binutils-mingw-w64-i686 zlib1g-dev libcppunit-dev
+- sudo apt-get install -y scons binutils-mingw-w64-i686 zlib1g-dev libcppunit-dev
 - cd nsis-3.10-src && scons -j `nproc` ZLIB_W32=$HOME/zlib SKIPUTILS="NSIS Menu" NSIS_CONFIG_LOG=yes build install
 build_script:
 - cd smartmontools
