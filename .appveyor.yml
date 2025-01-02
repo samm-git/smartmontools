@@ -11,12 +11,11 @@ init:
     sudo apt-get install -y g++-mingw-w64-x86-64 g++-mingw-w64-i686 unzip wget man2html-base groff
 
 before_build:
-- pwd && false
 - cd $HOME
 - wget 'https://downloads.sourceforge.net/project/libpng/zlib/1.2.8/zlib128-dll.zip' && unzip -d zlib zlib128-dll.zip
 - wget https://prdownloads.sourceforge.net/nsis/nsis-3.10-src.tar.bz2 && tar -xf nsis-3.10-src.tar.bz2
 - sudo apt-get install -y scons binutils-mingw-w64-i686 zlib1g-dev libcppunit-dev
-- cd nsis-3.10-src && sudo scons -j `nproc` ZLIB_W32=$HOME/zlib SKIPUTILS="NSIS Menu" NSIS_CONFIG_LOG=yes build install && cd $HOME
+- cd nsis-3.10-src && sudo scons -j `nproc` ZLIB_W32=$HOME/zlib SKIPUTILS="NSIS Menu" NSIS_CONFIG_LOG=yes build install && cd $APPVEYOR_BUILD_FOLDER
 build_script:
 - cd smartmontools
 - export SOURCE_DATE_EPOCH=$(git log -1 --format="%at")
