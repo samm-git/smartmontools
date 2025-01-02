@@ -9,6 +9,7 @@ init:
   - >
     sudo rm -rf /etc/apt/sources.list.d/* &&
     ls -lR /etc/apt/ &&
+    cat /etc/apt/sources.list &&
     sudo sed -i 's|jammy|noble|' /etc/apt/sources.list &&
     sudo apt-get update && sudo apt-get -y dist-upgrade &&
     sudo apt-get install -y g++-mingw-w64-x86-64 g++-mingw-w64-i686 unzip wget man2html-base groff nsis
