@@ -250,7 +250,7 @@ public:
 
   /// Output JSON tree using a 'void func(const char * str)'.
   template <typename F>
-  void output(F && func, nullptr_t /* no_context */, const output_options & options) const
+  void output(F && func, decltype(nullptr) /* no_context */, const output_options & options) const
     {
       output_func_ptr_1<F> out(std::forward<F>(func));
       output(out, options);
