@@ -3,7 +3,7 @@
  *
  * Home page of code is: https://www.smartmontools.org
  *
- * Copyright (C) 2017-25 Christian Franke
+ * Copyright (C) 2017-26 Christian Franke
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
@@ -433,32 +433,37 @@ void json::set_initlist_value(const node_path & path, const initlist_value & val
 // Return -1 if all UTF-8 sequences are valid, else return index of first invalid char
 static int check_utf8(const char * s)
 {
-  int state = 0, i;
+  unsigned shift = 0, val = 0, minval = 0;
+  int i;
   for (i = 0; s[i]; i++) {
     unsigned char c = s[i];
     // 0xb... (C++14) not used to preserve C++11 compatibility
-    if ((c & 0xc0) == 0x80) {                    // 0xb10xxxxx
-      if (--state < 0)
-        return i;
+    if ((c & 0xc0) == 0x80) {         // 0xb10xxxxxx (continuation)
+      if (shift < 6)
+        return i; // Extra continuation
+      shift -= 6;
+      val |= (c & 0x3f) << shift;
+      if (   !shift
+          && (!(   minval <= val && val <= 0x10ffff
+                && (val < 0x00d800 || 0x00dfff < val))))
+        return i; // Overlong encoding or out of Unicode range or UTF-16 surrogate
     }
-    else {
-      if (state != 0)
-        return i;
-      if (!(c & 0x80))                           // 0xb0xxxxxxx
-        ;
-      else if ((c & 0xe0) == 0xc0 && (c & 0x1f)) // 0xb110xxxxx
-        state = 1;
-      else if ((c & 0xf0) == 0xe0 && (c & 0x0f)) // 0xb1110xxxx
-        state = 2;
-      else if ((c & 0xf8) == 0xf0 && (c & 0x07)) // 0xb11110xxx
-        state = 3;
-      else
-        return i;
-    }
+    else if (shift)
+      return i; // Missing continuation
+    else if (!(c & 0x80))             // 0xb0xxxxxxx (U+000001...00007F)
+      ;
+    else if ((c & 0xe0) == 0xc0)      // 0xb110xxxxx (U+000080...0007FF)
+      shift =  6, val = (c & 0x1f) << shift, minval = 0x000080;
+    else if ((c & 0xf0) == 0xe0)      // 0xb1110xxxx (U+000800...00FFFF)
+      shift = 12, val = (c & 0x0f) << shift, minval = 0x000800;
+    else if ((c & 0xf8) == 0xf0)      // 0xb11110xxx (U+010000...10FFFF))
+      shift = 18, val = (c & 0x07) << shift, minval = 0x010000;
+    else
+      return i; // Invalid 0xb11111xxx
   }
-  if (state != 0)
-    return i;
-  return -1;
+  if (shift)
+    return i; // Missing continuation
+  return -1; // OK
 }
 
 static void print_quoted_string(FILE * f, const char * s)
