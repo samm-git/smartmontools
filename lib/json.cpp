@@ -515,10 +515,16 @@ static char yaml_string_needs_quotes(const char * s)
     return quotes;
 
   static const regular_expression special(
-    "[0-9]+[,0-9]*(\\.[0-9]*)?([eE][-+]?[0-9]+)?|" // decimal ('^[-+.]' handled above)
-    "0x[0-7A-Fa-f]+|" // hex
-    "[Ff][Aa][Ll][Ss][Ee]|[Tt][Rr][Uu][Ee]|[Nn][Oo]|[Yy][Ee][Ss]|" // boolean
-    "[Nn][Uu][Ll][Ll]" // null
+    // '[-+.]' prefixes are already detected above
+    "[0-9][,0-9_]*(\\.[,0-9_]*)?([Ee][-+]?[0-9]+)?|" // Decimal integer or float
+    "[0-9][0-9_]*(:[0-5]?[0-9])+(\\.[0-9_]*)?|" // Base 60 integer or float
+    "0b[01_]+|0x[0-7A-Fa-f_]+|" // Binary or hex
+    "[0-9]{4}-[0-9][0-9]?-[0-9][0-9]?" // Date ...
+    "(([Tt]| +)[0-9][0-9]?:[0-9][0-9]?:[0-9][0-9]?(\\.[0-9]*)?" // ... optional time ...
+    "( *(Z|[-+][0-9][0-9]?(:[0-9][0-9]?)?))?)?|" // ... optional timezone
+    "[Ff][Aa][Ll][Ss][Ee]|[Tt][Rr][Uu][Ee]|" // Boolean
+    "[Nn]([Oo])?|[Yy]([Ee][Ss])?|[Oo]([Ff][Ff]|[Nn])|" // Boolean
+    "[Nn][Uu][Ll][Ll]" // Null ("~" is already detected above)
   );
   if (special.full_match(s))
     return quotes; // special token
