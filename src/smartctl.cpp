@@ -4,7 +4,7 @@
  * Home page of code is: https://www.smartmontools.org
  *
  * Copyright (C) 2002-11 Bruce Allen
- * Copyright (C) 2008-25 Christian Franke
+ * Copyright (C) 2008-26 Christian Franke
  * Copyright (C) 2000 Michael Cornwell <cornwell@acm.org>
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -51,7 +51,7 @@ bool printing_is_off = false;
 // Control JSON output
 json jglb;
 static bool print_as_json = false;
-static json::print_options print_as_json_options;
+static json::output_options print_as_json_options;
 static bool print_as_json_output = false;
 static bool print_as_json_impl = false;
 static bool print_as_json_unimpl = false;
@@ -1742,7 +1742,7 @@ int main(int argc, char **argv)
     if (jglb.has_uint128_output())
       jglb["smartctl"]["uint128_precision_bits"] = uint128_to_str_precision_bits();
     jglb["smartctl"]["exit_status"] = status;
-    jglb.print(stdout, print_as_json_options);
+    jglb.output([](const char * str){ fputs(str, stdout); }, nullptr, print_as_json_options);
   }
   catch (const std::bad_alloc & /*ex*/) {
     // Memory allocation failed (also thrown by std::operator new)

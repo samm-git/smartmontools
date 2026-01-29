@@ -3,7 +3,7 @@
  *
  * Home page of code is: https://www.smartmontools.org
  *
- * Copyright (C) 2017-25 Christian Franke
+ * Copyright (C) 2017-26 Christian Franke
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
@@ -12,11 +12,13 @@
 
 #include <smartmon/byteorder.h>
 
-#include <stdio.h>
+#include <stdarg.h>
+
 #include <initializer_list>
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace smartmon {
@@ -199,15 +201,68 @@ public:
   bool has_uint128_output() const
     { return m_uint128_output; }
 
-  /// Options for print().
-  struct print_options {
+  /// Output function for 'output()'.
+  class output_function {
+  public:
+    virtual ~output_function() = default;
+    virtual void operator()(const char * str) = 0;
+    virtual void operator()(char c);
+    virtual void formatv(const char * fmt, va_list ap);
+    virtual void format(const char * fmt, ...)
+      SMARTMON_FORMAT_PRINTF(2, 3);
+  };
+
+protected:
+  // Use a 'void func(const char * str)' to implement 'output_function'.
+  template <typename F>
+  class output_func_ptr_1 : public output_function {
+  public:
+    output_func_ptr_1(F && func)
+      : m_func(std::forward<F>(func)) { }
+    virtual void operator()(const char * str) override
+      { m_func(str); }
+  private:
+    F && m_func;
+  };
+
+  // Use a 'void func(const char * str, T * context)' to implement 'output_function'.
+  template <typename F, typename T>
+  class output_func_ptr_2 : public output_function {
+  public:
+    output_func_ptr_2(F && func, T * context)
+      : m_func(std::forward<F>(func)), m_context(context) { }
+    virtual void operator()(const char * str) override
+      { m_func(str, m_context); }
+  private:
+    F && m_func; T * m_context;
+  };
+
+public:
+  /// Options for output().
+  struct output_options {
     bool pretty = false; //< Pretty-print output.
     bool sorted = false; //< Sort object keys.
     char format = 0; //< 'y': YAML, 'g': flat(grep, gron), other: JSON
   };
 
-  /// Print JSON tree to a file.
-  void print(FILE * f, const print_options & options) const;
+  /// Output JSON tree using an implementation of 'output_function'.
+  void output(output_function & out, const output_options & options) const;
+
+  /// Output JSON tree using a 'void func(const char * str)'.
+  template <typename F>
+  void output(F && func, nullptr_t /* no_context */, const output_options & options) const
+    {
+      output_func_ptr_1<F> out(std::forward<F>(func));
+      output(out, options);
+    }
+
+  /// Output JSON tree using a 'void func(const char * str, T * context)'.
+  template <typename F, typename T>
+  void output(F && func, T * context, const output_options & options) const
+    {
+      output_func_ptr_2<F, T> out(std::forward<F>(func), context);
+      output(out, options);
+    }
 
 private:
   struct node
@@ -261,11 +316,12 @@ private:
   void set_string(const node_path & path, const std::string & value);
   void set_initlist_value(const node_path & path, const initlist_value & value);
 
-  static void print_json(FILE * f, bool pretty, bool sorted, const node * p, int level);
-  static void print_yaml(FILE * f, bool pretty, bool sorted, const node * p, int level_o,
-                         int level_a, bool cont);
-  static void print_flat(FILE * f, const char * assign, bool sorted, const node * p,
-                         std::string & path);
+  static void output_json(output_function & prt, bool pretty, bool sorted, const node * p,
+    int level);
+  static void output_yaml(output_function & prt, bool pretty, bool sorted, const node * p,
+    int level_o, int level_a, bool cont);
+  static void output_flat(output_function & prt, const char * assign, bool sorted,
+    const node * p, std::string & path);
 };
 
 } // namespace smartmon
