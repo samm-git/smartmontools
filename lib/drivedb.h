@@ -2646,11 +2646,11 @@ const drive_settings builtin_knowndrives[] = {
     "SPCC M\\.2 SSD|" // Silicon Power A/M55, tested with SPCC M.2 SSD/Q0627A0, SPCC M.2 SSD/U0506A0,
       // SPCC M.2 SSD/U1209A0
     "SSD 120GB|" // Intenso M.2 SSD High, tested with SSD 120GB/R0529A
-    "T-FORCE (128|256|512)GB|" // tested with T-FORCE 512GB/T0910A0
+    "T-FORCE ((128|256|512)G|[12]T)B|" // tested with T-FORCE 512GB/T0910A0, T-FORCE 2TB/HP3C09BA
     "Verbatim Vi550 S3|" // tested with Verbatim Vi550 S3/U1124A0 (128GB),
        // may also exist with different controllers (tickets #1626, #1629, #1774, #1930, GH issues/185),
     "Vi550 S3", // another variant (ticket #1899), tested with Vi550 S3/HP3418C5
-    "HP(3418C5|S2227I)|KFS03005|P0510E|P0725A|Q(0627|1107)A0|R(0529A|0817B0)|"
+    "HP(3418C5|3C09BA|S2227I)|KFS03005|P0510E|P0725A|Q(0627|1107)A0|R(0529A|0817B0)|"
     "S(0222|0424|0509|0618|1211|1230)A0|S112[78]B0|T0(311|519|910)A0|"
     "U(0202|0309|0401|0506|1124|1209)A0|V0((414|609|823)A|(303|718)B)0|V1(027|102)A0|VE0R6327|"
     "W(0201|0413|0714|0825)A0",
