@@ -2517,6 +2517,7 @@ const drive_settings builtin_knowndrives[] = {
     "SED2QII-LP SATA SSD ((64|128|256|512)GB|[12]TB)|" // ACPI SED2QII-LP, tested with
       // SED2QII-LP SATA SSD 64GB/S0410A
     "SH00M(120|240|480)GB|" // Yucun R580, tested with SH00M120GB/R0817A0
+    "SP DS72|" // Silicon Power DS72, tested with SP DS72/Y0328A00 (2TB) (0x090c:0x2320)
     "T60|" // KingSpec T60, tested with T60/20151120
     "TCSUNBOW [MX]3 (60|120|240|480)GB|" // TC-Sunbow M3/X3, tested with TCSUNBOW M3 240GB/R0327B0,
       // TCSUNBOW X3 120GB/R1211A0, TCSUNBOW X3 480GB/S0509A0
@@ -2569,6 +2570,8 @@ const drive_settings builtin_knowndrives[] = {
     "-v 167,raw48,Average_Erase_Count "
     "-v 168,raw48,Max_Erase_Count_of_Spec "
     "-v 169,raw48,Remaining_Lifetime_Perc "
+    "-v 172,raw48,Unkn_SiliconMotion_Attr " // SP DS72/Y0328A00
+    "-v 173,raw48,Unkn_SiliconMotion_Attr " // SP DS72/Y0328A00
   //"-v 175,raw48,Program_Fail_Count_Chip "
   //"-v 176,raw48,Erase_Fail_Count_Chip "
   //"-v 177,raw48,Wear_Leveling_Count "
@@ -2583,11 +2586,13 @@ const drive_settings builtin_knowndrives[] = {
   //"-v 197,raw48,Current_Pending_Sector "
   //"-v 198,raw48,Offline_Uncorrectable "
   //"-v 199,raw48,UDMA_CRC_Error_Count "
+    "-v 218,raw48,Unkn_SiliconMotion_Attr " // SP DS72/Y0328A00
     "-v 225,raw48,Host_Writes_32MiB " // FW 20140402
     "-v 231,raw48,SSD_Life_Left " // KINGSTON SKC600256G/S4500105
   //"-v 232,raw48,Available_Reservd_Space "
     "-v 241,raw48,Host_Writes_32MiB "
     "-v 242,raw48,Host_Reads_32MiB "
+    "-v 244,raw48,Unkn_SiliconMotion_Attr " // SP DS72/Y0328A00
     "-v 245,raw48,TLC_Writes_32MiB " // FW N0815B, N1114H // TS128GMSA370I: Flash Write Sector Count
     "-v 246,raw48,SLC_Writes_32MiB "
     "-v 247,raw48,Raid_Recoverty_Ct "
@@ -6515,6 +6520,13 @@ const drive_settings builtin_knowndrives[] = {
   // 0x0860 (?)
   { "USB: ; ",
     "0x0860:0x0001",
+    "", // 0x0100
+    "",
+    "-d sat"
+  },
+  // Silicon Motion
+  { "USB: SP DS72; ",
+    "0x090c:0x2320",
     "", // 0x0100
     "",
     "-d sat"
