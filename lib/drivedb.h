@@ -7325,6 +7325,13 @@ const drive_settings builtin_knowndrives[] = {
     "",
     "-d sntrealtek"
   },
+  // Longsys Electronics / Lexar
+  { "USB: Lexar E300; Realtek",
+    "0x21c4:0xb083",
+    "",
+    "",
+    "-d sntrealtek"
+  },
   // 0x235c (?)
   { "USB: ; ",
     "0x235c:0xa006", // Terramaster D4-320 (see also 0x5432:0x235c)
