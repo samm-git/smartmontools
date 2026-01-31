@@ -4639,9 +4639,10 @@ const drive_settings builtin_knowndrives[] = {
     "", "",
     "-v 1,raw24/raw32 -v 7,raw24/raw32 -v 188,raw16"
   },
-  { "Seagate Laptop SSHD", // tested with ST500LM000-1EJ162/SM11
+  { "Seagate Laptop SSHD", // tested with ST500LM000-1EJ162/SM11, ST1000LM014-1EJ164/SM30
     "ST(500|1000)LM0(00|14)-.*",
-    "", "", ""
+    "", "",
+    "-v 1,raw24/raw32 -v 7,raw24/raw32 -v 188,raw16"
   },
   { "Seagate Medalist 1010, 1720, 1721, 2120, 3230 and 4340",  // ATA2, with -t permissive
     "ST3(1010|1720|1721|2120|3230|4340)A",
