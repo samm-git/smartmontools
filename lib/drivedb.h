@@ -6463,6 +6463,12 @@ const drive_settings builtin_knowndrives[] = {
     "",
     "-d sat"
   },
+  { "USB: Freecom; ",
+    "0x07ab:0xfc73",
+    "", // 0x0100
+    "",
+    "-d sat,12"
+  },
   { "USB: Freecom Quattro 3.0; ", // USB3.0+IEEE1394+eSATA->SATA
     "0x07ab:0xfc77",
     "",
