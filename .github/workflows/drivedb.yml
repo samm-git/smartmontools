@@ -53,6 +53,10 @@ jobs:
   drivedb-check-main:
     runs-on: ubuntu-latest
 
+    env:
+      # Allow build with incomplete version info due to '--depth=1'
+      SMARTMONTOOLS_TEST_BUILD: 1
+
     steps:
       - uses: actions/checkout@v4
 

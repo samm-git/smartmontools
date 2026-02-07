@@ -550,12 +550,12 @@ else
 # Show '-V' output and check drive database syntax
 check:
 	./smartctl -V
-	@echo "./smartctl -B $(top_srcdir)/lib/drivedb.h -P showall >/dev/null"
+	@echo "./smartctl -B ../lib/drivedb.h -P showall >/dev/null"
 	@if ./smartctl -P showall >/dev/null && \
-	    ./smartctl -B $(top_srcdir)/lib/drivedb.h -P showall >/dev/null; then \
-	  echo "$(top_srcdir)/lib/drivedb.h: OK"; \
+	    ./smartctl -B ../lib/drivedb.h -P showall >/dev/null; then \
+	  echo "$../lib/drivedb.h: OK"; \
 	else \
-	  echo "$(top_srcdir)/lib/drivedb.h: Syntax check failed"; exit 1; \
+	  echo "$../lib/drivedb.h: Syntax check failed"; exit 1; \
 	fi
 endif
 
@@ -689,7 +689,7 @@ BINFILES_WIN32 = \
 if ENABLE_DRIVEDB
 BINFILES_WIN32 += \
         os_win32/update-smart-drivedb.ps1 \
-        $(top_srcdir)/lib/drivedb.h
+        ../lib/drivedb.h
 endif
 
 DOCFILES_WIN32 = \
@@ -853,6 +853,7 @@ check-vc-version:
 
 CONFIG_VC_FILES = \
         $(srcdir)/os_win32/vc$(vcver)/config.h \
+        $(srcdir)/os_win32/vc$(vcver)/drivedb.h \
         $(srcdir)/os_win32/vc$(vcver)/smartctl_res.rc \
         $(srcdir)/os_win32/vc$(vcver)/smartd_res.rc \
         $(srcdir)/os_win32/vc$(vcver)/smartmon/smartmon_config.h \
@@ -873,6 +874,12 @@ $(srcdir)/os_win32/vc$(vcver)/config.h: ../config.h Makefile
 	$(ECHO_V_GEN) ' $$(CONFIG_VC_FILTER) < ../config.h > $@.tmp'
 	@$(CONFIG_VC_FILTER) < ../config.h > $@.tmp
 	$(AM_V_at)mv -f $@.tmp $@
+
+$(srcdir)/os_win32/vc$(vcver)/drivedb.h: ../lib/drivedb.h
+	$(AM_V_GEN)cp ../lib/drivedb.h $@
+
+../lib/drivedb.h: ../drivedb/drivedb.h ../lib/Makefile ../include/smartmon/version.sh
+	$(MAKE) -C ../lib drivedb.h
 
 $(srcdir)/os_win32/vc$(vcver)/smartmon/smartmon_config.h: ../include/smartmon/smartmon_config.h Makefile
 	$(ECHO_V_GEN) ' $$(CONFIG_VC_FILTER) < ../include/smartmon/smartmon_config.h > $@.tmp'

@@ -4,7 +4,7 @@
 #
 # Home page of code is: https://www.smartmontools.org
 #
-# Copyright (C) 2010-25 Christian Franke
+# Copyright (C) 2010-26 Christian Franke
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
@@ -124,11 +124,11 @@ warning()
 selecturl()
 {
   case $1 in
-    github) # https://github.com/smartmontools/smartmontools/raw/refs/heads/main/lib/drivedb.h
+    github) # https://github.com/smartmontools/smartmontools/raw/refs/heads/main/drivedb/drivedb.h
             # redirected to:
-            url='https://raw.githubusercontent.com/smartmontools/smartmontools/refs/heads/main/lib/drivedb.h' ;;
+            url='https://raw.githubusercontent.com/smartmontools/smartmontools/refs/heads/main/drivedb/drivedb.h' ;;
     svn)    url='https://svn.code.sf.net/p/smartmontools/code/trunk/smartmontools/drivedb.h' ;;
-    trac)   url='https://www.smartmontools.org/browser/lib/drivedb.h?format=raw&rev=main' ;;
+    trac)   url='https://www.smartmontools.org/browser/drivedb/drivedb.h?format=raw&rev=main' ;;
     *) error "$1: is none of 'github svn trac'"
   esac
 }
@@ -628,8 +628,8 @@ case "${url_of:+url_of}${url:+url}${file:+file}" in
         if [ -z "$main" ]; then
           url=`echo "$url" | sed -e "s,/main/,/drivedb/$branch/," \
                                  -e "s,rev=main,rev=drivedb/$branch,"`
-          case $branch in
-            [567].*) url=`echo "$url" | sed -e 's,/lib/,/smartmontools/,'` ;;
+          case $branch in [567].*)
+            url=`echo "$url" | sed -e 's,/drivedb/drivedb\.h,/smartmontools/drivedb.h,'` ;;
           esac
         elif [ -z "$no_verify" ]; then
           error "'--main' requires '--no-verify'"

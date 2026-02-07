@@ -22,6 +22,10 @@ jobs:
       matrix:
         language: [ cpp ]
 
+    env:
+      # Allow build with incomplete version info due to '--depth=1'
+      SMARTMONTOOLS_TEST_BUILD: 1
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3

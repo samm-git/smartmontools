@@ -3,7 +3,7 @@
 #
 # Home page of code is: https://www.smartmontools.org
 #
-# Copyright (C) 2022-25 Christian Franke
+# Copyright (C) 2022-26 Christian Franke
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
@@ -204,12 +204,12 @@ function selecturl($url_of, [ref]$url)
 {
   switch ($url_of) {
     'github' {
-       #    https://github.com/smartmontools/smartmontools/raw/refs/heads/main/lib/drivedb.h
+       #    https://github.com/smartmontools/smartmontools/raw/refs/heads/main/drivedb/drivedb.h
        #    redirected to:
-       $u = 'https://raw.githubusercontent.com/smartmontools/smartmontools/refs/heads/main/lib/drivedb.h'
+       $u = 'https://raw.githubusercontent.com/smartmontools/smartmontools/refs/heads/main/drivedb/drivedb.h'
      }
     'svn'  { $u = 'https://svn.code.sf.net/p/smartmontools/code/trunk/smartmontools/drivedb.h' }
-    'trac' { $u = 'https://www.smartmontools.org/browser/lib/drivedb.h?format=raw&rev=main' }
+    'trac' { $u = 'https://www.smartmontools.org/browser/drivedb/drivedb.h?format=raw&rev=main' }
     default { error "${url_of}: is none of 'github svn trac'" }
   }
   $url.Value = $u
@@ -549,15 +549,15 @@ if (!$Url -and !$File) {
   $Url = ""
   selecturl $UrlOf ([ref]$Url)
   if ($Url -match '/main/|rev=main') {
-      if (!$Main) {
-        $Url = $Url -replace "/main/","/drivedb/$Branch/" `
-                    -replace "rev=main","rev=drivedb/$Branch"
-        if ($Branch -match '^[567]\.') {
-         $Url = $Url -replace '/lib/','/smartmontools/'
-        }
-      } elseif (!$NoVerify) {
-        error "'-Main' requires '-NoVerify'"
+    if (!$Main) {
+      $Url = $Url -replace "/main/","/drivedb/$Branch/" `
+                  -replace "rev=main","rev=drivedb/$Branch"
+      if ($Branch -match '^[567]\.') {
+        $Url = $Url -replace '/drivedb/drivedb\.h','/smartmontools/drivedb.h'
       }
+    } elseif (!$NoVerify) {
+      error "'-Main' requires '-NoVerify'"
+    }
   } elseif ($Url -match '/trunk/') {
     if ($Main) {
       error "'-Main' is not supported with '-UrlOf svn'"

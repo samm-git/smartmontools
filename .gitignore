@@ -45,6 +45,7 @@
 /lib/**/*.o
 /lib/*/.dirstamp
 /lib/.libs/
+/lib/drivedb.h
 /lib/examples.stamp
 /lib/examples/*.exe
 /lib/examples/ata-standby

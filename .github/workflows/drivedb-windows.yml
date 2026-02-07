@@ -33,6 +33,10 @@ jobs:
   drivedb-check-win-main:
     runs-on: windows-latest
 
+    env:
+      # Allow build with incomplete version info due to '--depth=1'
+      SMARTMONTOOLS_TEST_BUILD: 1
+
     steps:
       - name: Install MSYS2 and ucrt-x86_64 build tools
         uses: msys2/setup-msys2@v2

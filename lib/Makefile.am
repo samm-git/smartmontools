@@ -29,6 +29,11 @@ if NEED_REGEX
 AM_CPPFLAGS += -I$(top_srcdir)/include/smartmon/regex -D_REGEX_STANDALONE
 endif
 
+# Suppress 'echo' if './configure --enable-silent-rules' or 'make V=0' is used.
+# Variables AM_V_* are provided by automake >= 1.13.
+ECHO_V = ! $(AM_V_P) || echo
+ECHO_V_GEN = @$(AM_V_P) || echo '  GEN      $@'; $(ECHO_V)
+
 if INSTALL_DEVEL_LIB
 
 lib_LTLIBRARIES = libsmartmon.la
@@ -52,7 +57,6 @@ libsmartmon_la_SOURCES = \
         dev_interface.cpp \
         dev_jmb39x_raid.cpp \
         dev_tunnelled.h \
-        drivedb.h \
         farmcmds.cpp \
         knowndrives.cpp \
         nvmecmds.cpp \
@@ -129,6 +133,32 @@ endif
 if ENABLE_DRIVEDB
 drivedbinst_DATA = drivedb.h
 endif
+
+knowndrives.lo: drivedb.h
+
+# Create drive database file with updated "VERSION: ..." string using same
+# syntax as on drivedb branches.
+drivedb.h: ../drivedb/drivedb.h Makefile ../include/smartmon/version.sh
+	$(ECHO_V_GEN) ' sed $$(ADD_VERSION) $(top_srcdir)/drivedb/drivedb.h > $@'
+	@. ../include/smartmon/version.sh && \
+	r=$$SMARTMONTOOLS_GIT_REV && d=$$SMARTMONTOOLS_GIT_REV_DATE && \
+	t=$$SMARTMONTOOLS_GIT_REV_TIME && s=$$SMARTMONTOOLS_GIT_SVN_REV && \
+	x="/$$s $$d $$t +0000 $$r" && \
+	if [ "$${r:+y}$${d:+y}$${t:+y}$${s:+y}" != "yyyy" ]; then \
+	  if [ "$$SMARTMONTOOLS_TEST_BUILD" != "1" ]; then \
+	    echo "../include/smartmon/version.sh: missing version information" >&2; \
+	    echo "Use this to override:" >&2; \
+	    echo "export SMARTMONTOOLS_TEST_BUILD=1" >&2; exit 1; \
+	  fi; \
+	  x=" (unknown)"; \
+	fi && \
+	sed 's,^\(  { "VERSION: [1-9][0-9]*\.[0-9][0-9]*\)",\1'"$$x"'",' \
+	  $(top_srcdir)/drivedb/drivedb.h > $@.tmp && \
+	mv -f $@.tmp $@
+
+CLEANFILES = \
+        drivedb.h \
+        drivedb.h.tmp
 
 examples_cpp = \
         examples/ata-standby.cpp \
