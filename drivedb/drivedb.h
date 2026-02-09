@@ -2393,7 +2393,10 @@ const drive_settings builtin_knowndrives[] = {
     "SanDisk SSD U110 (8|16|24|32|64|128)GB|" // tested with SanDisk SSD U110 32GB/U221000
     "SanDisk SDSA6[DGM]M-[0-9]*G-.*|" // tested with SanDisk SDSA6GM-016G-1006/U221006, SanDisk SDSA6MM-016G-1006/U221006,
       // SanDisk SDSA6GM-016G-1006/U221006
-    "SanDisk SD7[SU]B[23]Q(064|128|256|512)G.*", // tested with SD7SB3Q064G1122/SD7UB3Q256G1122/SD7SB3Q128G/SD7UB2Q512G1122
+    "SanDisk SD7[SU]B[23]Q(064|128|256|512)G.*|" // tested with SanDisk SD7SB3Q064G1122,
+      // SanDisk SD7SB3Q128G, SanDisk SD7UB3Q256G1122, SanDisk SD7UB2Q512G1122
+    "SanDisk SD8S[NM]AT-(032|064|128|256|512)G-1006", // tested with SanDisk SD8SMAT-032G-1006/Z2311006,
+      // SanDisk SD8SNAT-256G-1006/Z2311006
     "", "",
   //"-v 5,raw16(raw16),Reallocated_Sector_Ct "
   //"-v 9,raw24(raw8),Power_On_Hours "
