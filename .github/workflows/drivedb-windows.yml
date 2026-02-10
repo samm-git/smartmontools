@@ -23,19 +23,32 @@ jobs:
         run: |
           7z x "smartmontools-win32-setup.exe" "bin"
 
-      - name: Run update-smart-drivedb.ps1
+      - name: Run update-smart-drivedb.ps1 -UrlOf github
         # '-NoVerify' is required because only the MSYS2 version of GnuPG is
         # available (as part of the official Git for Windows package)
         run: |
+          bin/update-smart-drivedb.ps1 -Verbose -NoVerify -UrlOf github
+
+      - name: Run update-smart-drivedb.ps1
+        run: |
           cd bin
-          ./update-smart-drivedb.ps1 -Verbose -NoVerify
+          ./update-smart-drivedb.ps1 -Verbose -NoVerify drivedb-svn.h
+          if ($LASTEXITCODE) { "::error:: Download from svn failed" }
+
+      - name: Compare
+        run: |
+          cd bin
+          if (!(Test-Path "drivedb-svn.h")) { exit 0 }
+          $diff = Compare-Object (Get-Content "drivedb.h") (Get-Content "drivedb-svn.h")
+          if (!$diff) {
+            "Files drivedb.h and drivedb-svn.h are identical"
+          } else {
+            $diff
+            "::warning:: Download from svn differs"
+          }
 
   drivedb-check-win-main:
     runs-on: windows-latest
-
-    env:
-      # Allow build with incomplete version info due to '--depth=1'
-      SMARTMONTOOLS_TEST_BUILD: 1
 
     steps:
       - name: Install MSYS2 and ucrt-x86_64 build tools
@@ -54,21 +67,49 @@ jobs:
       - run: git config --global core.autocrlf input # prevent CRLF checkout
 
       - uses: actions/checkout@v4
+        with:
+          # Provide at least the commit log since last release for 'getversion.sh'.
+          # 'git clone --shallow-since=2025-04-29' would be sufficient but this is
+          # not supported by 'actions/checkout@v4'.
+          fetch-depth: 800
+          # Include (future) release tags for 'getversion.sh'
+          fetch-tags: true
 
       - name: Build
         run: |
           ./autogen.sh &&
           mkdir build && cd build && ../configure &&
           make -j V=0 && make check &&
-          make -C src os_win32/update-smart-drivedb.ps1
+          make -C src os_win32/update-smart-drivedb.ps1 &&
+          cp -v src/smartctl.exe src/os_win32/update-smart-drivedb.ps1 lib
         shell: msys2 '{0}'
 
       - name: Run update-smart-drivedb.ps1
         run: |
-          cd build\src
-          os_win32\update-smart-drivedb.ps1 -Verbose -Smartctl .\smartctl.exe ..\..\lib\drivedb.h
+          build\lib\update-smart-drivedb.ps1 -Verbose
+
+      - name: Run update-smart-drivedb.ps1 -Force
+        run: |
+          build\lib\update-smart-drivedb.ps1 -Verbose -Force
 
       - name: Rebuild
         run: |
           cd build && make -j V=0 && make check
         shell: msys2 '{0}'
+
+      - name: Run update-smart-drivedb.ps1 -UrlOf trac
+        run: |
+          build\lib\update-smart-drivedb.ps1 -Verbose -UrlOf trac build\lib\drivedb-trac.h
+          if ($LASTEXITCODE) { "::error:: Download from trac failed" }
+
+      - name: Compare
+        run: |
+          cd build\lib
+          if (!(Test-Path "drivedb-trac.h")) { exit 0 }
+          $diff = Compare-Object (Get-Content "drivedb.h") (Get-Content "drivedb-trac.h")
+          if (!$diff) {
+            "Files drivedb.h and drivedb-trac.h are identical"
+          } else {
+            $diff
+            "::warning:: Download from trac differs"
+          }
