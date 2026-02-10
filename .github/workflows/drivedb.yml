@@ -1,12 +1,12 @@
-name: Check drive database branches 7.0-7.5
+name: Check update-smart-drivedb
 
 # Due to githubusercontent.com rate limiting, this workflow may fail with:
 #   curl: (22) The requested URL returned error: 429
 on: workflow_dispatch
 
-# Problems with updates from svn are only reported as annotations.  Downloads
-# shortly after a svn commit may return the previous file release due to
-# content caching.
+# Problems with updates from svn and trac are only reported as annotations.
+# Downloads shortly after a svn commit may return the previous file release
+# due to content caching.
 
 jobs:
   drivedb-check-7_X:
@@ -37,10 +37,10 @@ jobs:
         run: |
           cd smartmontools/build && make -j V=0 && make check
 
-      - name: Run update-smart-drivedb -u svn
+      - name: Run update-smart-drivedb
         run: |
           cd smartmontools &&
-          build/update-smart-drivedb -v -s build/smartctl -u svn drivedb-svn.h ||
+          build/update-smart-drivedb -v -s build/smartctl drivedb-svn.h ||
           echo "::error:: Download from svn failed"
 
       - name: Compare
@@ -53,35 +53,53 @@ jobs:
   drivedb-check-main:
     runs-on: ubuntu-latest
 
-    env:
-      # Allow build with incomplete version info due to '--depth=1'
-      SMARTMONTOOLS_TEST_BUILD: 1
-
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Provide at least the commit log since last release for 'getversion.sh'.
+          # 'git clone --shallow-since=2025-04-29' would be sufficient but this is
+          # not supported by 'actions/checkout@v4'.
+          fetch-depth: 800
+          # Include (future) release tags for 'getversion.sh'
+          fetch-tags: true
 
       - name: Build
         run: |
           ./autogen.sh &&
-          mkdir build && cd build && ../configure &&
+          mkdir build && cd build &&
+          ../configure --prefix=/tmp/inst --with-drivedbinstdir &&
           make -j V=0 && make check
 
-      - name: Run update-smart-drivedb -u github
+      - name: Install
         run: |
-          build/src/update-smart-drivedb -v -s build/src/smartctl -u github lib/drivedb.h
+          cd build && make install && find /tmp/inst -ls
+
+      - name: Run update-smart-drivedb --install
+        run: |
+          /tmp/inst/sbin/update-smart-drivedb -v --install
+
+      - name: Run update-smart-drivedb
+        run: |
+          /tmp/inst/sbin/update-smart-drivedb -v
+
+      - name: Run update-smart-drivedb --force
+        run: |
+          /tmp/inst/sbin/update-smart-drivedb -v --force
 
       - name: Rebuild
         run: |
-          cd build && make -j V=0 && make check
+          cd build &&
+          cp -f /tmp/inst/var/lib/smartmontools/drivedb.h lib/drivedb.h &&
+          make -j V=0 && make check
 
-      - name: Run update-smart-drivedb -u svn
+      - name: Run update-smart-drivedb -u trac
         run: |
-          build/src/update-smart-drivedb -v -s build/src/smartctl -u svn lib/drivedb-svn.h ||
-          echo "::error:: Download from svn failed"
+          /tmp/inst/sbin/update-smart-drivedb -v -u trac /tmp/inst/var/lib/smartmontools/drivedb-trac.h ||
+          echo "::error:: Download from trac failed"
 
       - name: Compare
         run: |
-          cd lib
-          test -f drivedb-svn.h || exit 0
-          diff -s -U0 drivedb.h drivedb-svn.h ||
-          echo "::warning:: Download from svn differs"
+          cd /tmp/inst/var/lib/smartmontools
+          test -f drivedb-trac.h || exit 0
+          diff -s -U0 drivedb.h drivedb-trac.h ||
+          echo "::warning:: Download from trac differs"
