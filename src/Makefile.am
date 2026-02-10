@@ -543,12 +543,19 @@ update-smart-drivedb.8.pdf: update-smart-drivedb.8
 	$(AM_V_GEN)$(MAN2PDF) update-smart-drivedb.8 > $@
 
 # Default check target
+phony += check-drivedb check-smartctl
+check: check-drivedb check-smartctl
+
+# Print updated drivedb.h "VERSION: ..." string
+check-drivedb:
+	@sed -n 's,^  { \("VERSION: [^"]*"\).*$$,../lib/drivedb.h: \1,p' ../lib/drivedb.h
+
 if REALLY_CROSS_COMPILING
-check:
-	@echo "make check: unavailable if cross-compiling"
+check-smartctl:
+	@echo "./smartctl: check is unavailable if cross-compiling"
 else
 # Show '-V' output and check drive database syntax
-check:
+check-smartctl:
 	./smartctl -V
 	@echo "./smartctl -B ../lib/drivedb.h -P showall >/dev/null"
 	@if ./smartctl -P showall >/dev/null && \
