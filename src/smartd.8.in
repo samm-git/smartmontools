@@ -105,7 +105,7 @@ Other state changes are reported via systemd notify STATUS messages.
 Notification of successful reloads (after \fBHUP\fP signal) is not supported.
 To detect this process start-up type, \fBsmartd\fP checks whether the
 environment variable \*(AqNOTIFY_SOCKET\*(Aq is set.
-Note that it is required to set the \*(Aq\-n\*(Aq (\*(Aq\-\-nofork\*(Aq)
+Note that it is required to set the \*(Aq\-n\*(Aq (\*(Aq\-\-no\-fork\*(Aq)
 option in the \*(AqExecStart=/usr/local/sbin/smartd\*(Aq command line
 if \*(AqType=Notify\*(Aq is used.
 .\" %ENDIF ENABLE_SYSTEMD_NOTIFY
