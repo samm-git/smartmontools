@@ -4,11 +4,9 @@
 #
 # Home page of code is: https://www.smartmontools.org
 #
-# Copyright (C) 2019-23 Christian Franke
+# Copyright (C) 2019-26 Christian Franke
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
-#
-# $Id: cppcheck.sh 5597 2024-01-24 10:30:14Z chrfranke $
 #
 
 set -e
@@ -51,19 +49,23 @@ else
     echo "$myname: \$srcdir not found" >&2
     exit 1
   fi
+  srcdir="$srcdir/.."
   cd "$srcdir" || exit 1
-  files_v="*.cpp *.h os_win32/*.cpp os_win32/*.h"
-  files=$(echo $files_v)
-  case $files in
-    *\**) echo "$myname: Not run from \$srcdir" >&2; exit 1 ;;
-  esac
+  files_v="include/smartmon/*.h lib/*.cpp lib/*.h src/*.cpp src/*.h"
+  files_v="$files_v src/os_win32/*.cpp src/os_win32/*.h"
+  if ! files=$(ls -d $files_v 2>/dev/null); then
+    echo "$myname: Not run from \$srcdir" >&2
+    exit 1
+  fi
 fi
 
 # Check cppcheck version
 ver=$("$cppcheck" --version) || exit 1
 ver=${ver##* }
 case $ver in
-  1.8[56]|2.[237]|2.1[01]) ;;
+  [01].*|2.[0-9]|2.1[01]) # <= 2.11
+    echo "$myname: cppcheck $ver is not supported" >&2; exit 1 ;;
+  2.1[39].0) ;;
   *) echo "$myname: cppcheck $ver not tested with this script" ;;
 esac
 
@@ -71,33 +73,23 @@ esac
 enable="warning,style,performance,portability,information${unused_func}"
 
 sup_list="
-  #warning
-  syntaxError:drivedb.h
   #style
-  asctime_rCalled:utility.cpp
-  asctime_sCalled:utility.cpp
-  cstyleCast:sg_unaligned.h
-  getgrgidCalled:popen_as_ugid.cpp
-  getgrnamCalled:popen_as_ugid.cpp
-  getpwnamCalled:popen_as_ugid.cpp
-  getpwuidCalled:popen_as_ugid.cpp
+  asctime_rCalled:lib/utility.cpp
+  asctime_sCalled:lib/utility.cpp
+  cstyleCast:include/smartmon/sg_unaligned.h
+  getgrgidCalled:src/popen_as_ugid.cpp
+  getgrnamCalled:src/popen_as_ugid.cpp
+  getpwnamCalled:src/popen_as_ugid.cpp
+  getpwuidCalled:src/popen_as_ugid.cpp
   readdirCalled
   strtokCalled
   unusedStructMember
-  unusedFunction:sg_unaligned.h
-  unmatchedSuppression
-"
-
-case $ver in
-  2.1[1-9]) sup_list="$sup_list
-  #error
-  ctuOneDefinitionRuleViolation:cissio_freebsd.h
-  ctuOneDefinitionRuleViolation:freebsd_nvme_ioctl.h
+  unusedFunction:include/smartmon/sg_unaligned.h
   #information
   missingInclude
   missingIncludeSystem
-" ;;
-esac
+  unmatchedSuppression
+"
 
 suppress=
 for s in $sup_list; do
@@ -111,34 +103,51 @@ done
 
 # shellcheck disable=SC2089
 defs="\
+  -U__BYTE_ORDER__
+  -U__GNUC__
   -U__KERNEL__
+  -U__LITTLE_ENDIAN__
   -U__LP64__
   -U__MINGW64_VERSION_STR
   -U__VERSION__
+  -U__clang__
+  -U_MSVC_LANG
   -U_NETWARE
   -DBUILD_INFO=\"(...)\"
   -UCLOCK_MONOTONIC
   -DENOTSUP=1
   -DHAVE_ATTR_PACKED
+  -UHAVE_BYTESWAP_H
   -DHAVE_CONFIG_H
-  -DPACKAGE_VERSION=\"7.4\"
-  -DSG_IO=1
+  -DHAVE_UNISTD_H
+  -UIGNORE_FAST_LEBE
+  -DPACKAGE_BUGREPORT=\"email\"
+  -DPACKAGE_URL=\"https://...\"
+  -DPACKAGE_VERSION=\"8.0\"
+  -DSMARTMON_HAVE_ATTR_PACKED
   -DSMARTMONTOOLS_BUILD_HOST=\"host\"
   -DSMARTMONTOOLS_ATTRIBUTELOG=\"/file\"
   -DSMARTMONTOOLS_SAVESTATES=\"/file\"
+  -DSMARTMONTOOLS_SMARTDSCRIPTDIR=\"/dir\"
   -DSMARTMONTOOLS_DRIVEDBDIR=\"/dir\"
   -USMARTMONTOOLS_RELEASE_DATE
   -USMARTMONTOOLS_RELEASE_TIME
-  -USMARTMONTOOLS_SVN_REV
-  -DSOURCE_DATE_EPOCH=1665402854
+  -USMARTMONTOOLS_GIT_REV
+  -USMARTMONTOOLS_GIT_REV_DATE
+  -DSMARTMONTOOLS_GIT_VER_DESC=\"pre-8.0\"
+  -DSOURCE_DATE_EPOCH=1767225600
   -Umakedev
   -Ustricmp"
+
+# File for report of active checkers (cppcheck >= 2.12.0)
+checkers_report=$(mktemp -t "cppcheck.sh.tmp.XXXXXXXXXX")
 
 # Print brief version of command
 cat <<EOF
 # Cppcheck $ver
 $cppcheck \\
   --enable=$enable \\
+  --inconclusive \\
   $library \\
   $platform \\
   ... \\
@@ -147,19 +156,39 @@ $(for s in $suppress; do echo "  $s \\"; done)
   $files_v
 EOF
 
+rc=0
+
 # Run cppcheck with swapped stdout<>stderr
 # shellcheck disable=SC2090
 "$cppcheck" \
   $v \
   $jobs \
   --enable="$enable" \
-  --template='{file}:{line}: {severity}: ({id}) {message}' \
+  --inconclusive \
+  --template='{file}:{line}: {severity}:{inconclusive:inconclusive:} ({id}) {message}' \
   --force \
   --inline-suppr \
   --language=c++ \
+  --std=c++11 \
+  --checkers-report=$checkers_report \
+  -I "include" \
   $library \
   $platform \
   $defs \
   $suppress \
   $files \
-  3>&2 2>&1 1>&3 3>&-
+  3>&2 2>&1 1>&3 3>&- || rc=$?
+
+# Append report of active checkers if available
+if [ -f "$checkers_report" ]; then
+  cat - "$checkers_report" <<EOF
+
+===============
+Checkers Report
+===============
+
+EOF
+  rm -f "$checkers_report"
+fi
+
+exit $rc
